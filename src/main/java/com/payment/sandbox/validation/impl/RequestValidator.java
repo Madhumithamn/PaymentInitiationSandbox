@@ -28,18 +28,17 @@ public class RequestValidator implements Validator<PaymentInitiationModel> {
 	}
 
 	public void amountLimitExeeded(PaymentInitiationModel paymentModel) throws PaymentInitiationValidationException {
-		if ((Utility.isNumeric(paymentModel.getInitiationRequest().getAmount()))
-				&& (Double.valueOf(paymentModel.getInitiationRequest().getAmount()) > 0)
+		 if(!(Utility.isNumeric(paymentModel.getInitiationRequest().getAmount()))){
+				throw new PaymentInitiationValidationException(VALIDATIONSTATUS.GENERAL_ERROR.getErrorCode(),
+						"General Error", VALIDATIONSTATUS.GENERAL_ERROR);
+			}
+
+		if ((Double.valueOf(paymentModel.getInitiationRequest().getAmount()) > 0)
 				&& ((Utility.sum(paymentModel.getInitiationRequest().getDebtorIBAN()))
 						% paymentModel.getInitiationRequest().getDebtorIBAN().length() == 0)) {
 			throw new PaymentInitiationValidationException(VALIDATIONSTATUS.LIMIT_EXCEEDED.getErrorCode(),
 					"Amount Limit Exceeded", VALIDATIONSTATUS.LIMIT_EXCEEDED);
-		} else {
-			throw new PaymentInitiationValidationException(VALIDATIONSTATUS.GENERAL_ERROR.getErrorCode(),
-					"General Error", VALIDATIONSTATUS.GENERAL_ERROR);
-
-		}
-
+		} 
 	}
 
 	
