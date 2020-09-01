@@ -28,6 +28,12 @@ public class PaymentInitiationResponse {
 	public void setResponseStatusMessage(String responseStatusMessage) {
 		this.responseStatusMessage = responseStatusMessage;
 	}
+
+	@Override
+	public String toString() {
+		return "PaymentInitiationResponse [responseStatusCode=" + responseStatusCode + ", responseStatusMessage="
+				+ responseStatusMessage + "]";
+	}
 	
 
 }

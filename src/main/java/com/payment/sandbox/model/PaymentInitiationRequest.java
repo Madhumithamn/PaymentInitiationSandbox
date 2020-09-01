@@ -23,5 +23,12 @@ public class PaymentInitiationRequest {
 	public void setAmount(String amount) {
 		this.amount = amount;
 	}
+	@Override
+	public String toString() {
+		return "PaymentInitiationRequest [debtorIBAN=" + debtorIBAN + ", creditorIBAN=" + creditorIBAN + ", amount="
+				+ amount + "]";
+	}
+	
+	
 	
 }

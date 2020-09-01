@@ -14,7 +14,7 @@ import com.payment.sandbox.model.Utility.VALIDATIONSTATUS;
 @Component
 public class PaymentInitiationValidator {
 
-	private static final Logger logger = LoggerFactory.getLogger(PaymentInitiationValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PaymentInitiationValidator.class);
 	
 	@Autowired
 	@Qualifier("consumerValidator")
@@ -24,26 +24,14 @@ public class PaymentInitiationValidator {
 	@Qualifier("requestValidator")
 	private Validator<PaymentInitiationModel> requestValidator;
 
-	public PaymentInitiationResponse validation(PaymentInitiationModel paymentInitiationModel) {
-		try {
+	public PaymentInitiationResponse validation(PaymentInitiationModel paymentInitiationModel) throws PaymentInitiationValidationException {
+		LOG.debug("Payment initiation validation..");
 		consumerValidator.validate(paymentInitiationModel);
 		requestValidator.validate(paymentInitiationModel);
-		}catch(PaymentInitiationValidationException e) {
-			logger.error("Error "+e);
-			return buildRespone(e);
-		}
 		PaymentInitiationResponse paymentIntiationResponse = new PaymentInitiationResponse();
 		paymentIntiationResponse.setResponseStatusCode(VALIDATIONSTATUS.VALIDATIONPASS.getErrorCode());
 		paymentIntiationResponse.setResponseStatusMessage(VALIDATIONSTATUS.VALIDATIONPASS.toString());
 		return paymentIntiationResponse;
 	}
-
-	private PaymentInitiationResponse buildRespone(PaymentInitiationValidationException e) {
-		PaymentInitiationResponse paymentIntiationResponse = new PaymentInitiationResponse();
-		paymentIntiationResponse.setResponseStatusCode(e.getErrorCode());
-		paymentIntiationResponse.setResponseStatusMessage(e.getValidationStatus().toString());
-	 return paymentIntiationResponse;
-	}
-
 
 }

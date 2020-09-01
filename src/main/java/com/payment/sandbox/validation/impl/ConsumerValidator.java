@@ -32,7 +32,7 @@ import com.payment.sandbox.validation.Validator;
 @Component("consumerValidator")
 public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 
-	private static final Logger logger = LoggerFactory.getLogger(ConsumerValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ConsumerValidator.class);
 	private ObjectMapper obj = new ObjectMapper();
 
 	@Value("${subject.commonname}")
@@ -48,7 +48,7 @@ public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 
 	public void whiteListCertValidation(String base64EncodedSignature) throws PaymentInitiationValidationException {
 		try {
-			
+			LOG.info("whiteList Certification Validation.");
 			CertificateFactory fact = CertificateFactory.getInstance("X.509");
 			byte[] decodedSignature = Base64.getDecoder().decode(base64EncodedSignature);
 			X509Certificate cer = (X509Certificate) fact
@@ -56,7 +56,7 @@ public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 			String certificateName = cer.getSubjectDN().getName();
 			if (null == certificateName || certificateName.isEmpty()) {
 				throw new PaymentInitiationValidationException(VALIDATIONSTATUS.UNKNOWN_CERTIFICATE.getErrorCode(),
-						"Invalid Signature certificate", VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
+						Utility.INVALID_SIGNATURE_MESSAGE, VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
 			}
 			String[] splitted = Arrays.stream(certificateName.split(",")).map(String::trim).toArray(String[]::new);
 			Map<String, String> subjectNameMap = Arrays.asList(splitted).stream().map(str -> str.split("="))
@@ -64,13 +64,12 @@ public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 			if (null == subjectNameMap || null == subjectNameMap.get("CN") || subjectNameMap.get("CN").isEmpty()
 					|| !subjectNameMap.get("CN").startsWith(commonName)) {
 				throw new PaymentInitiationValidationException(VALIDATIONSTATUS.UNKNOWN_CERTIFICATE.getErrorCode(),
-						"Invalid Signature certificate", VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
+						Utility.INVALID_SIGNATURE_MESSAGE, VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
 			}
 		} catch (CertificateException ex) {
-			logger.error("Error occurred in whiteListCertValidation {}", ex);
+			LOG.error("Error occurred in whiteListCertValidation ", ex);
 			throw new PaymentInitiationValidationException(VALIDATIONSTATUS.UNKNOWN_CERTIFICATE.getErrorCode(),
-					"Invalid Signature certificate", VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
-
+					Utility.INVALID_SIGNATURE_MESSAGE, VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
 		}
 
 	}
@@ -78,10 +77,11 @@ public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 	public void signatureValidation(PaymentInitiationModel payInitiationModel)
 			throws PaymentInitiationValidationException {
 		try {
+			LOG.info("signature Validation.");
 			String xRequestId = payInitiationModel.getHeaders().get(Utility.HEADER_XREQUEST_ID);
 			String requestBody = obj.writeValueAsString(payInitiationModel.getInitiationRequest());
 			String base64EncodedSignature = payInitiationModel.getHeaders().get(Utility.HEADER_SIGNATURE_CERTIFICATE);
-			Signature rsaSha256Signature = Utility.getSignature(payInitiationModel);
+			Signature rsaSha256Signature = Utility.getRequestSignature(payInitiationModel);
 			// Verify
 			CertificateFactory fact = CertificateFactory.getInstance("X.509");
 			byte[] decodedSignature = Base64.getDecoder().decode(base64EncodedSignature);
@@ -93,18 +93,21 @@ public class ConsumerValidator implements Validator<PaymentInitiationModel> {
 			verifyRsaSha256Signature.initVerify(key);
 			verifyRsaSha256Signature.update(xRequestId.getBytes());
 			verifyRsaSha256Signature.update(messageDigest.digest(requestBody.getBytes()));
-
-			if (!(verifyRsaSha256Signature.verify(rsaSha256Signature.sign()))) {								
+			boolean signatureVerfication=verifyRsaSha256Signature.verify(rsaSha256Signature.sign());
+			LOG.debug("signature Verification passed {}",signatureVerfication);
+			if (!signatureVerfication) {								
 				throw new PaymentInitiationValidationException(VALIDATIONSTATUS.UNKNOWN_CERTIFICATE.getErrorCode(),
-						"Invalid Signature certificate", VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
+						Utility.INVALID_SIGNATURE_MESSAGE, VALIDATIONSTATUS.UNKNOWN_CERTIFICATE);
 			}
 		} catch (IOException | NoSuchAlgorithmException jex) {
+			LOG.error("IOException or NoSuchAlgorithmException Error occurred during signature validation",jex);
 			throw new PaymentInitiationValidationException(VALIDATIONSTATUS.GENERAL_ERROR.getErrorCode(),
 					"General Error", VALIDATIONSTATUS.GENERAL_ERROR);
 			
 		} catch (CertificateException | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
+			LOG.error("CertificateException/InvalidKeyException and other error occurred during signature validation",e);
 			throw new PaymentInitiationValidationException(VALIDATIONSTATUS.INVALID_SIGNATURE.getErrorCode(),
-					"Invalid Signature certificate", VALIDATIONSTATUS.INVALID_SIGNATURE);
+					Utility.INVALID_SIGNATURE_MESSAGE, VALIDATIONSTATUS.INVALID_SIGNATURE);
 		}
 	}
 

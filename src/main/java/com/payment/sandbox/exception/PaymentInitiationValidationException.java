@@ -8,16 +8,10 @@ public class PaymentInitiationValidationException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = -8934724450665989223L;
-	private int errorCode;
-	private String msg;
-	private VALIDATIONSTATUS validationStatus;
+	private final int errorCode;
+	private final String msg;
+	private final VALIDATIONSTATUS validationStatus;
 	
-	
-
-	public PaymentInitiationValidationException() {
-		super();
-	}
-
 	public PaymentInitiationValidationException(int errorCode, String msg,VALIDATIONSTATUS validationStatus) {
 		super(msg);
 		this.errorCode = errorCode;
@@ -29,25 +23,16 @@ public class PaymentInitiationValidationException extends Exception {
 		return errorCode;
 	}
 
-	public void setErrorCode(int errorCode) {
-		this.errorCode = errorCode;
-	}
-
+	
 	public String getMsg() {
 		return msg;
 	}
 
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
-
+	
 	public VALIDATIONSTATUS getValidationStatus() {
 		return validationStatus;
 	}
 
-	public void setValidationStatus(VALIDATIONSTATUS validationStatus) {
-		this.validationStatus = validationStatus;
-	}
 	
 	
 
